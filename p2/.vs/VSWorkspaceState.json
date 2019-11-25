@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\arch",
+    "\\arch\\mips",
+    "\\arch\\mips\\boot",
+    "\\arch\\mips\\include",
+    "\\arch\\mips\\kernel",
+    "\\drivers",
+    "\\kernel",
+    "\\kernel\\locking",
+    "\\kernel\\syscall"
+  ],
+  "SelectedNode": "\\arch\\mips\\kernel\\entry.S",
+  "PreviewInSolutionExplorer": false
+}

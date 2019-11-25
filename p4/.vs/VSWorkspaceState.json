@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\arch",
+    "\\arch\\mips",
+    "\\arch\\mips\\boot",
+    "\\arch\\mips\\include",
+    "\\arch\\mips\\kernel",
+    "\\drivers",
+    "\\include",
+    "\\include\\os",
+    "\\tools"
+  ],
+  "SelectedNode": "\\arch\\mips\\boot\\bootblock.S",
+  "PreviewInSolutionExplorer": false
+}

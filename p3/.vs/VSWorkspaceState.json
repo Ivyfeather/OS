@@ -1,0 +1,17 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\arch",
+    "\\arch\\mips",
+    "\\arch\\mips\\boot",
+    "\\arch\\mips\\include",
+    "\\arch\\mips\\kernel",
+    "\\drivers",
+    "\\kernel",
+    "\\kernel\\locking",
+    "\\libs",
+    "\\test"
+  ],
+  "SelectedNode": "\\test\\test_shell.c",
+  "PreviewInSolutionExplorer": false
+}
