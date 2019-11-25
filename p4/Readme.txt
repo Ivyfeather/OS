@@ -5,3 +5,7 @@ One way to solve this:
 	2. add "screen_reflush();" after "screen_write();" in screen.c
 
 so change these terms back when to test on chip.
+
+
+Q1: do we need to store/load BADVADDR during context switch?
+// has been done for now

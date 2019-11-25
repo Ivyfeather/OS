@@ -123,9 +123,10 @@ END(close_int)
     sw      gp,OFFSET_REG28(k0) #28
     sw      sp,OFFSET_REG29(k0) #29
     sw      fp,OFFSET_REG30(k0) #30
-    #mfc0	ra,CP0_EPC
 	sw		ra,OFFSET_REG31(k0) #31
 
+	mfc0	k1,CP0_BADVADDR
+	sw		k1,OFFSET_BADVADDR(k0)
     #to save special registers
     #mfhi    k1
     #sw      k1,OFFSET_HI(k0)    #HI
@@ -182,6 +183,9 @@ END(close_int)
     lw      sp,OFFSET_REG29(k0) #29
     lw      fp,OFFSET_REG30(k0) #30
     lw      ra,OFFSET_REG31(k0) #31
+
+	lw		k1,OFFSET_BADVADDR(k0)
+	mtc0	k1,CP0_BADVADDR
 
     #to restore special registers
     #lw      k1,OFFSET_HI(k0)    #HI

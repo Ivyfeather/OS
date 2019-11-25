@@ -154,7 +154,6 @@ void do_spawn(task_info_t *task) {
 	}
 	process_id++;
 	
-
 	// entry point
 	pcb[i].user_context.cp0_epc = task->entry_point;
 
