@@ -6,11 +6,11 @@
     "\\arch\\mips\\boot",
     "\\arch\\mips\\include",
     "\\arch\\mips\\kernel",
-    "\\drivers",
-    "\\include",
-    "\\include\\os",
-    "\\tools"
+    "\\init",
+    "\\kernel",
+    "\\kernel\\mm",
+    "\\kernel\\sched"
   ],
-  "SelectedNode": "\\arch\\mips\\boot\\bootblock.S",
+  "SelectedNode": "\\kernel\\mm\\memory.c",
   "PreviewInSolutionExplorer": false
 }
