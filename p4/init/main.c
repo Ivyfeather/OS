@@ -31,6 +31,7 @@
 #include "screen.h"
 #include "common.h"
 #include "syscall.h"
+#include "mm.h"
 
 #define KERNELBASE 0xa0f00000
 #define STACKSIZE 0x8000

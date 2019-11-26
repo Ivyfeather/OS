@@ -2,6 +2,7 @@
 #define INCLUDE_MM_H_
 
 #include "type.h"
+#include "string.h"
 
 #define TLB_ENTRY_NUMBER 32
 
@@ -25,8 +26,30 @@
   * ------------------------------------------------
   */
 
+ /*
+  * Virtual Memory,   2G, 0x0000_0000 to 0x8000_0000
+  * Physical Memory, 32M,  0x000_0000 to  0x200_0000
+  *
+  * Available Physical Memory(For User Mapping), 16M, 0x100_0000 to 0x200_0000
+  *
+  */
+
+#define DIR_NUM 0x400		//2^10 = 1024 directory_entries
+#define PAGETABLE_NUM 0x400 //2^10 = 1024 page_table_entries
+
+
+#define PADDR_BASE 0x01000000 
+#define VADDR_BASE 0x00000000
+
+#define PAGE_SIZE  0x1000	// 4K
+#define PPAGE_NUM  0x1000	// 16M/4K = 4K
 
 void do_TLB_Refill();
 void do_page_fault();
+
+void init_page_table();
+void init_TLB();
+
+extern pte_t *dir[DIR_NUM];
 
 #endif

@@ -3,6 +3,7 @@
 .equ    KERNEL, 0
 .equ    USER,   156
 .equ	TIMESLICE, 80000
+.equ    PAGE_MASK, 0x00000000
 
 .macro STI
 .endm
@@ -292,7 +293,17 @@ END(handle_other)
 
 NESTED(TLBexception_handler_entry, 0, sp)
 TLBexception_handler_begin:
-	//TODO: TLB exception entry
-	//jmp exception_handler[i] which decided by CP0_CAUSE
+	# TODO: TLB exception entry
+	# jmp exception_handler[i] which decided by CP0_CAUSE
 TLBexception_handler_end:
 END(TLBexception_handler_entry)
+
+NESTED(write_TLB)		# write_TLB(pte_even, pte_odd, index)
+	mtc0	a0, CP0_ENTRYLO0
+	mtc0	a1, CP0_ENTRYLO1
+	li		t0, PAGE_MASK
+	mtc0	t0, CP0_PAGEMASK
+	mtc0    a2, CP0_INDEX
+	tlbwi
+    jr      ra
+END(write_TLB)

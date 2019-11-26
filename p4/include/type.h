@@ -45,4 +45,6 @@ typedef long long int64_t;
 typedef unsigned long long uint64_t;
 typedef int pid_t;
 
+typedef unsigned int pte_t;
+
 #endif

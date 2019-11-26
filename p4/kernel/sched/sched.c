@@ -246,7 +246,7 @@ void do_kill(pid_t pid) {
 
 	queue_remove(p->queue,p);
 	p->status = TASK_EXITED;
-	//////test
+
 	printf_in_kernel("kill process pid=%d\n",pid);
 
 }
