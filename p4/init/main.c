@@ -97,12 +97,8 @@ static void init_exception()
     reset_CP0_status();
 
 	// 3. Copy the level 2 exception handling code to 0x80000180
-    uint8_t * addr_exception_handler_begin = (uint8_t *)(exception_handler_begin);
-    uint8_t * addr_exception_handler_end   = (uint8_t *)(exception_handler_end);
-    uint32_t length_exception_handler    = (uint32_t)(addr_exception_handler_end - addr_exception_handler_begin);
-    //exception handler address: 0x80000180
-	memcpy((void *)0x80000180, addr_exception_handler_begin, length_exception_handler);
-
+	memcpy((uint8_t*)0x80000000, (uint8_t*)TLBexception_handler_begin, (uint32_t)(TLBexception_handler_end - TLBexception_handler_begin));
+	memcpy((uint8_t*)0x80000180, (uint8_t*)exception_handler_begin, (uint32_t)(exception_handler_end - exception_handler_begin));
 	// 4. reset CP0_COMPARE & CP0_COUNT register
 	// this work can be saved for later
 	// in main(), when enabling interrupt

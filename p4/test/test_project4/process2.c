@@ -47,9 +47,7 @@ void rw_task1(unsigned long a[6])
 	int curs = 0;
 	int memory[RW_TIMES];
 	int i = 0;
-	a[0] = a[3] = 0x100;
-	a[1] = a[4] = 0x1200;
-	a[2] = a[5] = 0x10000;
+
 	for(i = 0; i < RW_TIMES; i++)
 	{
 		screen_move_cursor(1, curs+i);

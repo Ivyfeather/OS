@@ -144,6 +144,8 @@ pid_t do_getpid(void) {
 	return current_running->pid;
 }
 
+unsigned long a[6];
+void scanf_ul(unsigned long *ul);
 void do_spawn(task_info_t *task) {
 	int i;
 	for (i = 1;i < NUM_MAX_TASK && pcb[i].status!=TASK_EXITED;i++)
@@ -156,6 +158,18 @@ void do_spawn(task_info_t *task) {
 	
 	// entry point
 	pcb[i].user_context.cp0_epc = task->entry_point;
+	// parameters
+	int j = 0;
+	for (j = 0;j < 3;j++) {
+		printf_in_kernel("Input %d num: ", j);
+		scanf_ul(&a[j]);
+		a[j + 3] = a[j];
+	}
+
+	pcb[i].user_context.regs[4] = (uint32_t)a;
+
+	// init page table
+
 
 	pcb[i].prev = pcb[i].next = NULL;
 	pcb[i].pid = process_id;
@@ -167,7 +181,6 @@ void do_spawn(task_info_t *task) {
 	pcb[i].waited = 0;
 	queue_init(&pcb[i].wait_queue);
 	//lock array set to 0
-	int j = 0;
 	for (;j < NUM_LOCKS;j++)
 		pcb[i].lock_array[j] = NULL;
 
@@ -249,4 +262,86 @@ void do_kill(pid_t pid) {
 
 	printf_in_kernel("kill process pid=%d\n",pid);
 
+}
+
+
+// to scan parameters for process 2
+static void disable_interrupt()
+{
+	uint32_t cp0_status = get_cp0_status();
+	cp0_status &= 0xfffffffe;
+	set_cp0_status(cp0_status);
+}
+static void enable_interrupt()
+{
+	uint32_t cp0_status = get_cp0_status();
+	cp0_status |= 0x01;
+	set_cp0_status(cp0_status);
+}
+static char read_uart_ch(void)
+{
+	char ch = 0;
+	unsigned char *read_port = (unsigned char *)(0xbfe48000 + 0x00);
+	unsigned char *stat_port = (unsigned char *)(0xbfe48000 + 0x05);
+
+	while ((*stat_port & 0x01))
+	{
+		ch = *read_port;
+	}
+	return ch;
+}
+
+#define BUFFSIZE 20
+void scanf_ul(unsigned long *ul){
+	char buff[BUFFSIZE+1];
+	int i = 0, j = 0;
+	char ch = 0;
+	unsigned long addr = 0;
+	while (1)
+	{
+		disable_interrupt();
+		ch = read_uart_ch();
+		enable_interrupt();
+
+		if (ch == '\0')
+			continue;
+		else if (ch == 8) {
+			if (i == 0) continue;
+			else {
+				buff[i] = '\0';
+				i--;
+				screen_write_ch(ch);
+				continue;
+			}
+		}
+		else if (ch == 13 || i == BUFFSIZE-1) {
+			buff[++i] = '\0';
+			screen_write_ch(ch);
+			// TODO solve input
+			if (i == BUFFSIZE)
+				printf_in_kernel("Length Exceeds %d.\n", BUFFSIZE);
+			else if (i == 1);
+			else {
+				// atoi
+				for (j = 0;buff[j] != '\0';j++) {
+					if (buff[j] <= '9' && buff[j] >= '0')
+						addr = addr * 16 + (buff[j] - '0');
+					else if (buff[j] <= 'f' && buff[j] >= 'a')
+						addr = addr * 16 + (buff[j] - 'a'+10);
+					else if (buff[j] <= 'F' && buff[j] >= 'A')
+						addr = addr * 16 + (buff[j] - 'A' + 10);
+				}
+				break;
+			}
+			memset(buff, 0, BUFFSIZE + 1);
+			i = 0;
+			continue;
+		}
+		disable_interrupt();
+		buff[i++] = ch;
+		screen_write_ch(ch);
+		screen_reflush();
+		enable_interrupt();
+	}
+	*ul = addr;
 }

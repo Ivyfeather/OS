@@ -102,14 +102,14 @@ void test_shell()
                 continue;
             }
         }
-        else if (ch == 13) {
+        else if (ch == 13 || i == BUFFSIZE-1) {
             buff[++i] = '\0';
-            screen_write_ch(ch);
+            screen_write_ch(13);
             // TODO solve command
-            if (i == BUFFSIZE)
-                printf("Command Length Exceeds %d.\n", BUFFSIZE);
-
-            if (strcmp("ps", buff) == 0)
+			if (i == BUFFSIZE)	
+				printf("Command Length Exceeds %d.\n", BUFFSIZE);
+			else if (i == 1);	//no input
+            else if (strcmp("ps", buff) == 0)
                 sys_ps();
             else if (strcmp("clear", buff) == 0)
                 sys_clear();

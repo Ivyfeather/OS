@@ -229,6 +229,12 @@ exception_handler_begin:
     andi    k0, k0, 0x7c	    # select ExcCode(6th~2rd bits,0x7C), defined in "irq.h"
     srl     k0, k0, 2
 
+	li		k1, 2				# TLBL(2)
+	beq		k0, k1, TLB_Invalid
+
+	li		k1, 3				# TLBS(3)
+	beq		k0, k1, TLB_Invalid
+
     li      k1, 8               # SYS(8)
     beq     k0, k1, Syscall
     
@@ -241,7 +247,8 @@ Interrupt:
     j       handle_int
 Syscall:
     j       handle_syscall
-
+TLB_Invalid:
+	j		handle_TLB_invalid
 exception_handler_end:
 END(exception_handler_entry)
 
@@ -263,7 +270,6 @@ NESTED(handle_int, 0, sp)
 	mtc0	k1, CP0_COMPARE
     # jump to CP0_EPC of current running, restored in k1
 	eret
-
 END(handle_int)
 
 NESTED(handle_syscall, 0, sp)
@@ -283,28 +289,57 @@ NESTED(handle_syscall, 0, sp)
 	eret
 END(handle_syscall)
 
+NESTED(handle_TLB_invalid, 0, sp)
+	addiu	sp, sp, -16
+	jal		do_TLB_Invalid
+	addiu	sp, sp, 16
+
+	RESTORE_CONTEXT(USER)
+	eret
+END(handle_TLB_invalid)
+
 NESTED(handle_other, 0, sp)
     # other exception handler
+	RESTORE_CONTEXT(USER)
+	mfc0	k1, CP0_EPC
+	addiu	k1, k1, 4
+	mtc0	k1, CP0_EPC
 	eret
 END(handle_other)
 
 .global TLBexception_handler_begin
 .global TLBexception_handler_end
 
+# at 0x80000000, solve TLB_refill only 
 NESTED(TLBexception_handler_entry, 0, sp)
 TLBexception_handler_begin:
 	# TODO: TLB exception entry
 	# jmp exception_handler[i] which decided by CP0_CAUSE
+	SAVE_CONTEXT(USER)
+	jal		do_TLB_Refill
+
+
+	RESTORE_CONTEXT(USER)
+	eret
 TLBexception_handler_end:
 END(TLBexception_handler_entry)
 
-NESTED(write_TLB, 0, sp)		# write_TLB(pte_even, pte_odd, index)
-	mtc0	a0, CP0_ENTRYLO0
+NESTED(write_TLB, 0, sp)		# write_TLB(pte_even, pte_odd, index, entryhi)
+	mtc0	a0, CP0_ENTRYLO0	# for task 1
 	mtc0	a1, CP0_ENTRYLO1
 	li		t0, PAGE_MASK
 	mtc0	t0, CP0_PAGEMASK
 	mtc0    a2, CP0_INDEX
-	mtc0	a3, CP0_ENTRYHI		#for task 1
+	mtc0	a3, CP0_ENTRYHI
 	tlbwi
     jr      ra
 END(write_TLB)
+
+NESTED(refill_TLB, 0, sp)		# refill_TLB(pte_even, pte_odd)
+	mtc0	a0, CP0_ENTRYLO0
+	mtc0	a1, CP0_ENTRYLO1
+	li		t0, PAGE_MASK
+	mtc0	t0, CP0_PAGEMASK
+	tlbwr
+    jr      ra
+END(refill_TLB)

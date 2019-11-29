@@ -3,6 +3,7 @@
 
 #include "type.h"
 #include "string.h"
+#include "sched.h"
 
 #define TLB_ENTRY_NUMBER 32
 
@@ -41,7 +42,7 @@
 #define DIR_NUM 0x400		//2^10 = 1024 directory_entries
 #define PAGETABLE_NUM 0x400 //2^10 = 1024 page_table_entries
 
-
+////// for task2, just let 2processes be in the same Pspace
 #define PADDR_BASE 0x01000000 
 #define VADDR_BASE 0x00000000
 
@@ -49,11 +50,13 @@
 #define PPAGE_NUM  0x1000	// 16M/4K = 4K
 
 void do_TLB_Refill();
+void do_TLB_Invalid();
 void do_page_fault();
 
 void init_page_table();
 void init_TLB();
 void init_swap();
 //extern pte_t *dir[DIR_NUM];
-
+int find_pcb(pid_t pid);
+pte_t* find_page(uint32_t vaddr);
 #endif
