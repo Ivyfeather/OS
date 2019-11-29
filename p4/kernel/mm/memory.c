@@ -5,7 +5,7 @@
 //directory: pte pointer array, each item points to a page table
 pte_t *dir[DIR_NUM];	////// PID-2 as first index
 
-pte_t test_page[PAGETABLE_NUM];
+//pte_t test_page[PAGETABLE_NUM];
 
 ////// where do we allocate the new page table in physical address?
 // one idea: choose an address that will not overlap with OS kernel
@@ -16,12 +16,25 @@ pte_t test_page[PAGETABLE_NUM];
 // one idea: set segment for different processes
 // LOW BOUND + i % SEGSIZE
 
+int PAGE_ALLOC_BASE = 0xa0f00000;
+#define PAGE_ALLOC_TOP 0xa1000000
+#define ALLOCSIZE 0x1000 //4K
+void* alloc_page_table() {
+	if (PAGE_ALLOC_BASE == PAGE_ALLOC_TOP) return 0;
+
+	memset((void*)PAGE_ALLOC_BASE, 0, ALLOCSIZE);
+	PAGE_ALLOC_BASE += ALLOCSIZE;
+	return (void *)(PAGE_ALLOC_BASE - ALLOCSIZE);
+}
+
+pte_t *test_page = NULL;
 void init_page_table() 
 {
 	int i = 0;
 	memset(dir, 0, sizeof(dir));
 	//task 1
-	memset(test_page, 0, sizeof(test_page));
+	//memset(test_page, 0, sizeof(test_page));
+	test_page = alloc_page_table();
 
 	for (i = 0;i < PAGETABLE_NUM;i++) {
 		test_page[i] = (PADDR_BASE + (i % PPAGE_NUM) * PAGE_SIZE) + 0x17;
@@ -67,14 +80,23 @@ void do_TLB_Invalid(uint32_t index)
 	//int pcb_index = find_pcb(pid);
 	pcb_t *p = current_running;
 	uint32_t vaddr = p->user_context.cp0_badvaddr;
+	
+	//test
+	//printf_in_kernel("vaddr:%x|", vaddr);
 
 	pte_t *page = find_page(vaddr);
+
+	//test
+	//printf_in_kernel("pte:%x|", *page);
+
 	pte_t entrylo0 = PTE_TO_TLBLO(*page);
 	pte_t entrylo1 = PTE_TO_TLBLO(*(page + 1));
 
-
-
-	printf_in_kernel("invalid");
+	invalid_TLB(entrylo0, entrylo1, index);
+	
+	//test
+	//printf_in_kernel("index:%x|", index);
+	//printf_in_kernel("invalid ");
 
 }
 
@@ -110,6 +132,7 @@ pte_t* find_page(uint32_t vaddr)
 	int dir_num = DirNum(vaddr);
 	int vpage_num = VPageNum(vaddr);
 
+	/*
 	pte_t *page_table = dir[dir_num];
 
 	if (page_table == NULL) {	//page table not init
@@ -122,7 +145,7 @@ pte_t* find_page(uint32_t vaddr)
 		}
 
 	}
-
+	*/
 
 	if (vpage_num % 2 == 1)
 		return &test_page[vpage_num - 1];
@@ -132,13 +155,3 @@ pte_t* find_page(uint32_t vaddr)
 
 
 
-int PAGE_ALLOC_BASE = 0xa0f00000;
-#define PAGE_ALLOC_TOP 0xa1000000
-#define ALLOCSIZE 0x1000 //4K
-void* alloc_page_table() {
-	if (PAGE_ALLOC_BASE == PAGE_ALLOC_TOP) return 0;
-
-	memset((void*)PAGE_ALLOC_BASE, 0, ALLOCSIZE);
-	PAGE_ALLOC_BASE += ALLOCSIZE;
-	return (void *)(PAGE_ALLOC_BASE - ALLOCSIZE);
-}

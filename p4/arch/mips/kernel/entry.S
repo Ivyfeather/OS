@@ -303,12 +303,6 @@ NESTED(handle_TLB_invalid, 0, sp)
 
 	RESTORE_CONTEXT(USER)
 	
-	#test
-		mfc0	k1, CP0_EPC
-	addiu	k1, k1, 4
-	mtc0	k1, CP0_EPC
-
-
 	eret
 END(handle_TLB_invalid)
 
