@@ -101,7 +101,7 @@ static void init_exception()
     uint8_t * addr_exception_handler_end   = (uint8_t *)(exception_handler_end);
     uint32_t length_exception_handler    = (uint32_t)(addr_exception_handler_end - addr_exception_handler_begin);
     //exception handler address: 0x80000180
-    memcpy(0x80000180,addr_exception_handler_begin,length_exception_handler);
+	memcpy((void *)0x80000180, addr_exception_handler_begin, length_exception_handler);
 
 	// 4. reset CP0_COMPARE & CP0_COUNT register
 	// this work can be saved for later

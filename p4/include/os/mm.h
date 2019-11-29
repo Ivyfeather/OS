@@ -6,6 +6,10 @@
 
 #define TLB_ENTRY_NUMBER 32
 
+/*
+	Beware: +, - has higher prior than >>, <<, &, |
+*/
+
 /* --------------------- Page Table Entry ---------------------- *
  *	     31                      12	 11	  6  5    3  2   1   0
  * -----+--------------------------+-------+-------+---+---+---+
@@ -49,7 +53,7 @@ void do_page_fault();
 
 void init_page_table();
 void init_TLB();
-
-extern pte_t *dir[DIR_NUM];
+void init_swap();
+//extern pte_t *dir[DIR_NUM];
 
 #endif

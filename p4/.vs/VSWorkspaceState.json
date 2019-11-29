@@ -6,11 +6,11 @@
     "\\arch\\mips\\boot",
     "\\arch\\mips\\include",
     "\\arch\\mips\\kernel",
-    "\\init",
-    "\\kernel",
-    "\\kernel\\mm",
-    "\\kernel\\sched"
+    "\\include",
+    "\\include\\os",
+    "\\test",
+    "\\test\\test_project4"
   ],
-  "SelectedNode": "\\kernel\\mm\\memory.c",
+  "SelectedNode": "\\test\\test_project4\\process2.c",
   "PreviewInSolutionExplorer": false
 }

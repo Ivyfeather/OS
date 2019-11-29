@@ -47,26 +47,29 @@ void rw_task1(unsigned long a[6])
 	int curs = 0;
 	int memory[RW_TIMES];
 	int i = 0;
+	a[0] = a[3] = 0x100;
+	a[1] = a[4] = 0x1200;
+	a[2] = a[5] = 0x10000;
 	for(i = 0; i < RW_TIMES; i++)
 	{
-		vt100_move_cursor(1, curs+i);
+		screen_move_cursor(1, curs+i);
 		mem1 = a[i];
-		vt100_move_cursor(1, curs+i);
+		screen_move_cursor(1, curs+i);
 		memory[i] = mem2 = rand();
 		*(int *)mem1 = mem2;
-		printf("Write: 0x%x, %d", mem1, mem2);
+		printf("Write: 0x%x, %d;", mem1, mem2);
 	}
 	curs = RW_TIMES;
 	for(i = 0; i < RW_TIMES; i++)
 	{
-		vt100_move_cursor(1, curs+i);
+		screen_move_cursor(1, curs+i);
 		mem1 = a[RW_TIMES+i];
-		vt100_move_cursor(1, curs+i);
+		screen_move_cursor(1, curs+i);
 		memory[i+RW_TIMES] = *(int *)mem1;
 		if(memory[i+RW_TIMES] == memory[i])
-			printf("Read succeed: %d", memory[i+RW_TIMES]);
+			printf("Read succeed: %d;", memory[i+RW_TIMES]);
 		else
-			printf("Read error: %d", memory[i+RW_TIMES]);
+			printf("Read error: %d;", memory[i+RW_TIMES]);
 	}
 	while(1);
 	//Input address from argv.

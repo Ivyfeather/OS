@@ -6,6 +6,7 @@
 pte_t *dir[3][DIR_NUM];	////// PID-2 as first index
 
 pte_t test_page[PAGETABLE_NUM];
+
 ////// where do we allocate the new page table in physical address?
 // one idea: choose an address that will not overlap with OS kernel
 // e.g., 0x00f0 0000 - 0x0100 0000 or 0x0000 0180+XXX - 0x0080 0000
@@ -24,25 +25,37 @@ void init_page_table()
 
 	dir[0][0] = test_page;
 	for (i = 0;i < PAGETABLE_NUM;i++) {
-		test_page[i] = (PADDR_BASE + i % PPAGE_NUM*PAGE_SIZE) + 0x2f;
+		test_page[i] = (PADDR_BASE + (i % PPAGE_NUM) * PAGE_SIZE) + 0x17;
 	}
 
 }
 
 void init_TLB()
 {
+	
 	int i = 0;
 	for (;i < TLB_ENTRY_NUMBER;i++) {
-
+		pte_t entrylo0 = ((test_page[2 * i] & 0xfffff000) >> 6) + (test_page[2 * i] & 0x7f);
+		pte_t entrylo1 = ((test_page[2 * i + 1] & 0xfffff000) >> 6) + (test_page[2 * i + 1] & 0x7f);
+		uint32_t entryhi = i << 14;
+		write_TLB(entrylo0, entrylo1, i, entryhi);
 	}
+	
 
+	//write_TLB(0x00040017, 0x00040057, 0, 0x0); //at 16M
 }
 
 void do_TLB_Refill()
 {
 
 }
+
 void do_page_fault() 
+{
+
+}
+
+void init_swap()
 {
 
 }

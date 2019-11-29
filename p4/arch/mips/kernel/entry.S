@@ -298,12 +298,13 @@ TLBexception_handler_begin:
 TLBexception_handler_end:
 END(TLBexception_handler_entry)
 
-NESTED(write_TLB)		# write_TLB(pte_even, pte_odd, index)
+NESTED(write_TLB, 0, sp)		# write_TLB(pte_even, pte_odd, index)
 	mtc0	a0, CP0_ENTRYLO0
 	mtc0	a1, CP0_ENTRYLO1
 	li		t0, PAGE_MASK
 	mtc0	t0, CP0_PAGEMASK
 	mtc0    a2, CP0_INDEX
+	mtc0	a3, CP0_ENTRYHI		#for task 1
 	tlbwi
     jr      ra
 END(write_TLB)
