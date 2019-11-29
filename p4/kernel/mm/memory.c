@@ -3,7 +3,7 @@
 //TODO:Finish memory management functions here refer to mm.h and add any functions you need.
 
 //directory: pte pointer array, each item points to a page table
-pte_t *dir[3][DIR_NUM];	////// PID-2 as first index
+pte_t *dir[DIR_NUM];	////// PID-2 as first index
 
 pte_t test_page[PAGETABLE_NUM];
 
@@ -29,13 +29,14 @@ void init_page_table()
 
 }
 
+#define PTE_TO_TLBLO(pte) ( (( (pte) & 0xfffff000)>> 6) + ( (pte) & 0x7f) )
 void init_TLB()
 {
 	int i = 0;
 	for (;i < TLB_ENTRY_NUMBER;i++) {
-		pte_t entrylo0 = ((test_page[2 * i] & 0xfffff000) >> 6) + (test_page[2 * i] & 0x7f);
-		pte_t entrylo1 = ((test_page[2 * i + 1] & 0xfffff000) >> 6) + (test_page[2 * i + 1] & 0x7f);
-		uint32_t entryhi = i << 14;
+		pte_t entrylo0 = PTE_TO_TLBLO(test_page[2 * i]);
+		pte_t entrylo1 = PTE_TO_TLBLO(test_page[2 * i + 1]);
+		uint32_t entryhi = i << 13;
 		write_TLB(entrylo0, entrylo1, i, entryhi);
 	}
 	//write_TLB(0x00040017, 0x00040057, 0, 0x0); //at 16M
@@ -44,20 +45,35 @@ void init_TLB()
 void do_TLB_Refill()
 {
 	pid_t pid = do_getpid();
-	//int pcb_index = find_pcb(pid);
-	//pcb_t *p = &pcb[pcb_index]; ////// -1, might have problem
-	pcb_t *p = &pcb[2];
+	int pcb_index = find_pcb(pid);
+	pcb_t *p = &pcb[pcb_index]; ////// -1, might have problem
+	////// wait a second, is p current_running ? no need to find 
 	uint32_t vaddr = p->user_context.cp0_badvaddr;
 
 	pte_t *page = find_page(vaddr);
-	pte_t entrylo0 = *page;
-	pte_t entrylo1 = *(page + 1);
-	refill_TLB(entrylo0, entrylo1);
+	pte_t entrylo0 = PTE_TO_TLBLO(*page);
+	pte_t entrylo1 = PTE_TO_TLBLO(*(page + 1));
+
+	//////ASID
+	pte_t entryhi = vaddr & 0xffffe000;	//EntryHi[12] should be 0
+	refill_TLB(entrylo0, entrylo1, entryhi);
 
 	printf_in_kernel("refill");
 }
 
-void do_TLB_Invalid() {
+void do_TLB_Invalid(uint32_t index) 
+{
+	//pid_t pid = do_getpid();
+	//int pcb_index = find_pcb(pid);
+	pcb_t *p = current_running;
+	uint32_t vaddr = p->user_context.cp0_badvaddr;
+
+	pte_t *page = find_page(vaddr);
+	pte_t entrylo0 = PTE_TO_TLBLO(*page);
+	pte_t entrylo1 = PTE_TO_TLBLO(*(page + 1));
+
+
+
 	printf_in_kernel("invalid");
 
 }
@@ -83,12 +99,30 @@ int find_pcb(pid_t pid)
 	return -1;
 }
 
-#define VDirNum(vaddr) ((uint32_t)(vaddr) >> 22) //take 10 bits dirnum
-#define VPageNum(vaddr) (((uint32_t)(vaddr) >> 12)| 0x3ff) //take 10 bits pagenum
+#define DirNum(vaddr) ( (vaddr) >> 22) //take 10 bits dirnum
+#define VPageNum(vaddr) (( (vaddr) >> 12) & 0x3ff) //take 10 bits pagenum
+
+void* alloc_page_table();
+
 /* use vaddr to find even-vpage_num pte, return pte_t* */
 pte_t* find_page(uint32_t vaddr)
 {
+	int dir_num = DirNum(vaddr);
 	int vpage_num = VPageNum(vaddr);
+
+	pte_t *page_table = dir[dir_num];
+
+	if (page_table == NULL) {	//page table not init
+		pte_t *new_page = alloc_page_table();
+		dir[dir_num] = new_page;
+
+		int i = 0;
+		for (;i < PAGETABLE_NUM;i++) {
+			new_page[i] = (PADDR_BASE + (i % PPAGE_NUM) * PAGE_SIZE) + 0x17;
+		}
+
+	}
+
 
 	if (vpage_num % 2 == 1)
 		return &test_page[vpage_num - 1];

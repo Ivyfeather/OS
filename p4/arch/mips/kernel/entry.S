@@ -290,11 +290,25 @@ NESTED(handle_syscall, 0, sp)
 END(handle_syscall)
 
 NESTED(handle_TLB_invalid, 0, sp)
+	lw		k0, current_running
+	addiu	k0, k0, USER
+	lw		k1, OFFSET_BADVADDR(k0)	#get user_context.badvaddr //or just mfc0 CP0_BADVADDR ?
+	mtc0	k1, CP0_ENTRYHI
+	tlbp
+
 	addiu	sp, sp, -16
+	mfc0	a0, CP0_INDEX
 	jal		do_TLB_Invalid
 	addiu	sp, sp, 16
 
 	RESTORE_CONTEXT(USER)
+	
+	#test
+		mfc0	k1, CP0_EPC
+	addiu	k1, k1, 4
+	mtc0	k1, CP0_EPC
+
+
 	eret
 END(handle_TLB_invalid)
 
@@ -335,11 +349,22 @@ NESTED(write_TLB, 0, sp)		# write_TLB(pte_even, pte_odd, index, entryhi)
     jr      ra
 END(write_TLB)
 
-NESTED(refill_TLB, 0, sp)		# refill_TLB(pte_even, pte_odd)
+NESTED(refill_TLB, 0, sp)		# refill_TLB(pte_even, pte_odd, entryhi)
 	mtc0	a0, CP0_ENTRYLO0
 	mtc0	a1, CP0_ENTRYLO1
 	li		t0, PAGE_MASK
 	mtc0	t0, CP0_PAGEMASK
+	mtc0	a2, CP0_ENTRYHI
 	tlbwr
     jr      ra
 END(refill_TLB)
+
+NESTED(invalid_TLB, 0, sp)		# invalid_TLB(pte_even, pte_odd, index)
+	mtc0	a0, CP0_ENTRYLO0
+	mtc0	a1, CP0_ENTRYLO1
+	li		t0, PAGE_MASK
+	mtc0	t0, CP0_PAGEMASK
+	mtc0	a2, CP0_INDEX
+	tlbwi
+    jr      ra
+END(invalid_TLB)

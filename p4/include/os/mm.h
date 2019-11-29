@@ -9,6 +9,7 @@
 
 /*
 	Beware: +, - has higher prior than >>, <<, &, |
+			PTE and EntryLo have different formats
 */
 
 /* --------------------- Page Table Entry ---------------------- *
@@ -50,7 +51,7 @@
 #define PPAGE_NUM  0x1000	// 16M/4K = 4K
 
 void do_TLB_Refill();
-void do_TLB_Invalid();
+void do_TLB_Invalid(uint32_t index);
 void do_page_fault();
 
 void init_page_table();
