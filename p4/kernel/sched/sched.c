@@ -291,9 +291,9 @@ static char read_uart_ch(void)
 	return ch;
 }
 
-#define BUFFSIZE 20
+#define BUFFSIZE 8
 void scanf_ul(unsigned long *ul){
-	char buff[BUFFSIZE+1];
+	char buff[BUFFSIZE + 3];
 	int i = 0, j = 0;
 	char ch = 0;
 	unsigned long addr = 0;
@@ -314,12 +314,12 @@ void scanf_ul(unsigned long *ul){
 				continue;
 			}
 		}
-		else if (ch == 13 || i == BUFFSIZE-1) {
+		else if (ch == 13 || i == BUFFSIZE + 1) {
 			buff[++i] = '\0';
 			screen_write_ch(ch);
 			// TODO solve input
-			if (i == BUFFSIZE)
-				printf_in_kernel("Length Exceeds %d.\n", BUFFSIZE);
+			if (i == BUFFSIZE + 2)
+				printf_in_kernel("Length Exceeds %d.\nInput:", BUFFSIZE);
 			else if (i == 1);
 			else {
 				// atoi
@@ -331,10 +331,11 @@ void scanf_ul(unsigned long *ul){
 					else if (buff[j] <= 'F' && buff[j] >= 'A')
 						addr = addr * 16 + (buff[j] - 'A' + 10);
 				}
+				for (i = 0;i < BUFFSIZE + 3;i++) buff[i] = '\0';
 				i = 0;
 				break;
 			}
-			memset(buff, 0, BUFFSIZE + 1);
+			for (i = 0;i < BUFFSIZE + 3;i++) buff[i] = '\0';
 			i = 0;
 			continue;
 		}

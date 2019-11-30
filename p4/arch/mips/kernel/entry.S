@@ -292,7 +292,12 @@ END(handle_syscall)
 NESTED(handle_TLB_invalid, 0, sp)
 	lw		k0, current_running
 	addiu	k0, k0, USER
-	lw		k1, OFFSET_BADVADDR(k0)	#get user_context.badvaddr //or just mfc0 CP0_BADVADDR ?
+	lw		k1, OFFSET_BADVADDR(k0)	
+	#get user_context.badvaddr //or just mfc0 CP0_BADVADDR ?
+	
+	# Beware: must change badvaddr to EntryHi (clear lower 12bits)
+	li		k0, 0xfffff000
+	and		k1, k1, k0
 	mtc0	k1, CP0_ENTRYHI
 	tlbp
 

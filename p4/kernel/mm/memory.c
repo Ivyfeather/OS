@@ -3,9 +3,15 @@
 //TODO:Finish memory management functions here refer to mm.h and add any functions you need.
 
 //directory: pte pointer array, each item points to a page table
-pte_t *dir[DIR_NUM];	////// PID-2 as first index
+//pte_t *dir[DIR_NUM];	
+pte_t **dir = NULL;
 
-//pte_t test_page[PAGETABLE_NUM];
+/* for task 1 and 2, a pre-filled page table */
+//pte_t test_page[PAGETABLE_NUM]; 
+pte_t *test_page = NULL;
+
+//usage of physical memory, 1: busy, 0: free
+char mem[PPAGE_NUM];
 
 ////// where do we allocate the new page table in physical address?
 // one idea: choose an address that will not overlap with OS kernel
@@ -16,30 +22,34 @@ pte_t *dir[DIR_NUM];	////// PID-2 as first index
 // one idea: set segment for different processes
 // LOW BOUND + i % SEGSIZE
 
-int PAGE_ALLOC_BASE = 0xa0f00000;
-#define PAGE_ALLOC_TOP 0xa1000000
+int PAGE_ALLOC_BASE = 0xa0200000;
+#define PAGE_ALLOC_TOP 0xa0300000
 #define ALLOCSIZE 0x1000 //4K
 void* alloc_page_table() {
-	if (PAGE_ALLOC_BASE == PAGE_ALLOC_TOP) return 0;
-
-	memset((void*)PAGE_ALLOC_BASE, 0, ALLOCSIZE);
+	if (PAGE_ALLOC_BASE == PAGE_ALLOC_TOP) {
+		printf_in_kernel("PageTable Space Full\n");
+		return 0;
+	}
+	memset((void *)PAGE_ALLOC_BASE, 0, ALLOCSIZE);
 	PAGE_ALLOC_BASE += ALLOCSIZE;
 	return (void *)(PAGE_ALLOC_BASE - ALLOCSIZE);
 }
 
-pte_t *test_page = NULL;
+
 void init_page_table() 
 {
 	int i = 0;
-	memset(dir, 0, sizeof(dir));
+	dir = (pte_t **)alloc_page_table();
 	//task 1
-	//memset(test_page, 0, sizeof(test_page));
-	test_page = alloc_page_table();
-
+	test_page = (pte_t *)alloc_page_table();
+	/*
+	dir[0] = test_page;
 	for (i = 0;i < PAGETABLE_NUM;i++) {
 		test_page[i] = (PADDR_BASE + (i % PPAGE_NUM) * PAGE_SIZE) + 0x17;
 	}
-
+	*/
+	//init physical memory
+	memset(mem, 0, sizeof(mem));
 }
 
 #define PTE_TO_TLBLO(pte) ( (( (pte) & 0xfffff000)>> 6) + ( (pte) & 0x7f) )
@@ -57,27 +67,30 @@ void init_TLB()
 
 void do_TLB_Refill()
 {
-	pid_t pid = do_getpid();
-	int pcb_index = find_pcb(pid);
-	pcb_t *p = &pcb[pcb_index]; ////// -1, might have problem
-	////// wait a second, is p current_running ? no need to find 
+	//printf_in_kernel("refill");
+
+	pcb_t *p = current_running;
 	uint32_t vaddr = p->user_context.cp0_badvaddr;
 
 	pte_t *page = find_page(vaddr);
 	pte_t entrylo0 = PTE_TO_TLBLO(*page);
 	pte_t entrylo1 = PTE_TO_TLBLO(*(page + 1));
 
+	//test
+	//printf_in_kernel("pte:%x|", *page);
+
 	//////ASID
 	pte_t entryhi = vaddr & 0xffffe000;	//EntryHi[12] should be 0
 	refill_TLB(entrylo0, entrylo1, entryhi);
 
-	printf_in_kernel("refill");
+
 }
 
 void do_TLB_Invalid(uint32_t index) 
 {
-	//pid_t pid = do_getpid();
-	//int pcb_index = find_pcb(pid);
+	//test
+	//printf_in_kernel("invalid ");
+
 	pcb_t *p = current_running;
 	uint32_t vaddr = p->user_context.cp0_badvaddr;
 	
@@ -85,6 +98,8 @@ void do_TLB_Invalid(uint32_t index)
 	//printf_in_kernel("vaddr:%x|", vaddr);
 
 	pte_t *page = find_page(vaddr);
+	//test
+	//printf_in_kernel("|;%x;|",page);
 
 	//test
 	//printf_in_kernel("pte:%x|", *page);
@@ -96,7 +111,7 @@ void do_TLB_Invalid(uint32_t index)
 	
 	//test
 	//printf_in_kernel("index:%x|", index);
-	//printf_in_kernel("invalid ");
+
 
 }
 
@@ -124,34 +139,51 @@ int find_pcb(pid_t pid)
 #define DirNum(vaddr) ( (vaddr) >> 22) //take 10 bits dirnum
 #define VPageNum(vaddr) (( (vaddr) >> 12) & 0x3ff) //take 10 bits pagenum
 
-void* alloc_page_table();
 
 /* use vaddr to find even-vpage_num pte, return pte_t* */
 pte_t* find_page(uint32_t vaddr)
 {
 	int dir_num = DirNum(vaddr);
 	int vpage_num = VPageNum(vaddr);
+	
+	//test
+	//printf_in_kernel("1;");
 
-	/*
 	pte_t *page_table = dir[dir_num];
 
 	if (page_table == NULL) {	//page table not init
-		pte_t *new_page = alloc_page_table();
-		dir[dir_num] = new_page;
+		pte_t *new_page = (pte_t *)alloc_page_table();
+		page_table = dir[dir_num] = new_page;
 
 		int i = 0;
+		int j = (vaddr >> 22) << 10;
 		for (;i < PAGETABLE_NUM;i++) {
-			new_page[i] = (PADDR_BASE + (i % PPAGE_NUM) * PAGE_SIZE) + 0x17;
+			new_page[i] = (PADDR_BASE + ((i+j) % PPAGE_NUM) * PAGE_SIZE) + 0x17;
 		}
 
 	}
-	*/
-
+	//test
+	//printf_in_kernel("2;");
 	if (vpage_num % 2 == 1)
-		return &test_page[vpage_num - 1];
+		return page_table + vpage_num - 1; //page_table + vpage_num -1
 	else
-		return &test_page[vpage_num];
+		return page_table + vpage_num;
 }
 
+void *alloc_ppage()
+{
+	int i = 0;
+	for (;i < PPAGE_NUM;i++) {
+		if (mem[i] == 0) {
+			mem[i] = 1;
+			return (void *)(PADDR_BASE + PAGE_SIZE * i);
+		}
+	}
+	printf_in_kernel("Physical Memory Full");
+	return (void *)NULL;
+}
 
-
+void free(int v)
+{
+	mem[v] = 0;
+}

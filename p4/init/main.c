@@ -34,6 +34,7 @@
 #include "mm.h"
 
 #define KERNELBASE 0xa0f00000
+#define USERBASE  0x20000000
 #define STACKSIZE 0x8000
 
 static void init_memory()
@@ -47,6 +48,7 @@ static void init_memory()
 static void init_pcb()
 {
 	int kernel_sp = KERNELBASE;
+	int user_sp = USERBASE;
 	queue_init(&ready_queue);
 	queue_init(&sleep_queue);
 	int i;

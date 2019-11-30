@@ -60,4 +60,7 @@ void init_swap();
 //extern pte_t *dir[DIR_NUM];
 int find_pcb(pid_t pid);
 pte_t* find_page(uint32_t vaddr);
+void *alloc_ppage();
+void free(int v);
+
 #endif

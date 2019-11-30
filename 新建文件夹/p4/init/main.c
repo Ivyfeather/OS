@@ -40,7 +40,7 @@ static void init_memory()
 {
 	init_page_table(); 
 	//In task1&2, page table is initialized completely with address mapping, but only virtual pages in task3.
-	init_TLB();		//only used in P4 task1
+	//init_TLB();		//only used in P4 task1
 	init_swap();		//only used in P4 bonus: Page swap mechanism
 }
 

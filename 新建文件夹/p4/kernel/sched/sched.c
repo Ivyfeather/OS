@@ -161,7 +161,7 @@ void do_spawn(task_info_t *task) {
 	// parameters
 	int j = 0;
 	for (j = 0;j < 3;j++) {
-		printf_in_kernel("Input %d num: ", j);
+		printf_in_kernel("Input %d addr: ", j);
 		scanf_ul(&a[j]);
 		a[j + 3] = a[j];
 	}
@@ -331,6 +331,7 @@ void scanf_ul(unsigned long *ul){
 					else if (buff[j] <= 'F' && buff[j] >= 'A')
 						addr = addr * 16 + (buff[j] - 'A' + 10);
 				}
+				i = 0;
 				break;
 			}
 			memset(buff, 0, BUFFSIZE + 1);
