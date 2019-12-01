@@ -63,7 +63,7 @@ static void init_pcb()
 		pcb[i].user_context.regs[29] = pcb[i].user_stack_top = kernel_sp;
 		kernel_sp -= STACKSIZE;
 	}
-
+	pcb[2].user_context.regs[29] = pcb[2].user_stack_top = 0xffc;
 	//entry_point
 	pcb[process_id].user_context.cp0_epc    = (uint32_t)test_shell;
 
