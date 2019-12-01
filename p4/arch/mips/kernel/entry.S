@@ -301,11 +301,12 @@ NESTED(handle_TLB_invalid, 0, sp)
 	mtc0	k1, CP0_ENTRYHI
 	tlbp
 
+	RESTORE_CONTEXT(KERNEL)
 	addiu	sp, sp, -16
 	mfc0	a0, CP0_INDEX
 	jal		do_TLB_Invalid
 	addiu	sp, sp, 16
-
+	SAVE_CONTEXT(KERNEL)
 	RESTORE_CONTEXT(USER)
 	
 	eret
@@ -329,8 +330,9 @@ TLBexception_handler_begin:
 	# TODO: TLB exception entry
 	# jmp exception_handler[i] which decided by CP0_CAUSE
 	SAVE_CONTEXT(USER)
+	RESTORE_CONTEXT(KERNEL)
 	jal		do_TLB_Refill
-
+	SAVE_CONTEXT(KERNEL)
 
 	RESTORE_CONTEXT(USER)
 	eret
