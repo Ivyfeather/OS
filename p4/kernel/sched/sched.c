@@ -14,14 +14,14 @@ pcb_t *current_running;
 
 /* global process id */
 pid_t process_id = 1;
-int i = 0;
+int time_count = 0;
 static void check_sleeping()
 {
 	pcb_t *tmp;
 	uint32_t time = get_timer();
 
 	vt100_move_cursor(1,8);
-	printk("%d",i++);
+	printk("%d",time_count++);
 	
 	for(tmp = sleep_queue.head; tmp!= NULL; tmp = tmp->next){
 		if(tmp->time <= time && tmp->time != 0){
@@ -120,6 +120,7 @@ void do_unblock_all(queue_t *queue)
 }
 
 void do_ps(void) {
+	int i = 0;
 	printf_in_kernel("pid     name    status \n");
 	for (i = 0;i < NUM_MAX_TASK;i++) {
 		if (pcb[i].status != TASK_EXITED) {
@@ -148,8 +149,8 @@ pid_t do_getpid(void) {
 	return current_running->pid;
 }
 
-unsigned long a[6];
-void scanf_ul(unsigned long *ul);
+extern unsigned long arr[6];
+
 void do_spawn(task_info_t *task, int para_num) {
 	int i;
 	for (i = 1;i < NUM_MAX_TASK && pcb[i].status!=TASK_EXITED;i++)
@@ -164,14 +165,15 @@ void do_spawn(task_info_t *task, int para_num) {
 	pcb[i].user_context.cp0_epc = task->entry_point;
 	// parameters
 	if (para_num != 0) {
+		/*
 		int j = 0;
 		for (j = 0;j < 3;j++) {
 			printf_in_kernel("Input %d addr: ", j);
-			scanf_ul(&a[j]);
-			a[j + 3] = a[j];
+			scanf_ul(&arr[j]);
+			arr[j + 3] = arr[j];
 		}
-
-		pcb[i].user_context.regs[4] = (uint32_t)a;
+		*/
+		pcb[i].user_context.regs[4] = (uint32_t)arr;
 	}
 
 	// init page table
@@ -237,6 +239,7 @@ void do_waitpid(pid_t pid) {
 }
 
 void do_kill(pid_t pid) {
+	int i = 0;
 	pcb_t *p = NULL;
 	for (i = 2;i < NUM_MAX_TASK;i++) {
 		if (pcb[i].pid == pid && pcb[i].status != TASK_EXITED) {
@@ -259,8 +262,7 @@ void do_kill(pid_t pid) {
 
 
 	// release lock
-	int i = 0;
-	for (;i < NUM_LOCKS;i++)
+	for (i = 0;i < NUM_LOCKS;i++)
 		if (p->lock_array[i] != NULL)
 			do_mutex_lock_release(p->lock_array[i]);
 
@@ -298,60 +300,3 @@ static char read_uart_ch(void)
 	return ch;
 }
 
-#define BUFFSIZE 8
-//because this is in kernel, so it will not scheduler to another process. . 
-void scanf_ul(unsigned long *ul){
-	char buff[BUFFSIZE + 3];
-	int i = 0, j = 0;
-	char ch = 0;
-	unsigned long addr = 0;
-	while (1)
-	{
-		disable_interrupt();
-		ch = read_uart_ch();
-		enable_interrupt();
-
-		if (ch == '\0')
-			continue;
-		else if (ch == 8) {
-			if (i == 0) continue;
-			else {
-				buff[i] = '\0';
-				i--;
-				screen_write_ch(ch);
-				continue;
-			}
-		}
-		else if (ch == 13 || i == BUFFSIZE + 1) {
-			buff[++i] = '\0';
-			screen_write_ch(ch);
-			// TODO solve input
-			if (i == BUFFSIZE + 2)
-				printf_in_kernel("Length Exceeds %d.\nInput:", BUFFSIZE);
-			else if (i == 1);
-			else {
-				// atoi
-				for (j = 0;buff[j] != '\0';j++) {
-					if (buff[j] <= '9' && buff[j] >= '0')
-						addr = addr * 16 + (buff[j] - '0');
-					else if (buff[j] <= 'f' && buff[j] >= 'a')
-						addr = addr * 16 + (buff[j] - 'a'+10);
-					else if (buff[j] <= 'F' && buff[j] >= 'A')
-						addr = addr * 16 + (buff[j] - 'A' + 10);
-				}
-				for (i = 0;i < BUFFSIZE + 3;i++) buff[i] = '\0';
-				i = 0;
-				break;
-			}
-			for (i = 0;i < BUFFSIZE + 3;i++) buff[i] = '\0';
-			i = 0;
-			continue;
-		}
-		disable_interrupt();
-		buff[i++] = ch;
-		screen_write_ch(ch);
-		screen_reflush();
-		enable_interrupt();
-	}
-	*ul = addr;
-}

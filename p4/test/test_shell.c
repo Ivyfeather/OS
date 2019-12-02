@@ -68,7 +68,8 @@ static int num_test_tasks = 2;
 #define BUFFSIZE 20
 int sever(char f[], char t1[], char t2[]);
 int atoi(char s[]);
-
+void scanf_ul(unsigned long *ul);
+unsigned long arr[6] = { 0,0,0,0,0,0 };
 void test_shell()
 {
     sys_clear();
@@ -127,8 +128,15 @@ void test_shell()
                         printf("exec process[%d].\n", id);
 						if (id == 0)
 							sys_spawn(test_tasks[id], 0);
-						else if (id == 1)
+						else if (id == 1) {
+							int j = 0;
+							for (j = 0;j < 3;j++) {
+								printf("Input %d addr: ", j);
+								scanf_ul(&arr[j]);
+								arr[j + 3] = arr[j];
+							}
 							sys_spawn(test_tasks[id], 1);
+						}
                     }
                 }
                 else if (strcmp("kill", command) == 0)
@@ -183,4 +191,62 @@ int atoi(char s[]) {
 // show info about all tasks
 void info_tasks() {
 
+}
+
+#define LONGBUFFSIZE 8
+//because this is in kernel, so it will not scheduler to another process. . 
+void scanf_ul(unsigned long *ul) {
+	char buff[LONGBUFFSIZE + 3];
+	int i = 0, j = 0;
+	char ch = 0;
+	unsigned long addr = 0;
+	while (1)
+	{
+		disable_interrupt();
+		ch = read_uart_ch();
+		enable_interrupt();
+
+		if (ch == '\0')
+			continue;
+		else if (ch == 8) {
+			if (i == 0) continue;
+			else {
+				buff[i] = '\0';
+				i--;
+				screen_write_ch(ch);
+				continue;
+			}
+		}
+		else if (ch == 13 || i == LONGBUFFSIZE + 1) {
+			buff[++i] = '\0';
+			screen_write_ch(ch);
+			// TODO solve input
+			if (i == LONGBUFFSIZE + 2)
+				printf("Length Exceeds %d.\nInput:", LONGBUFFSIZE);
+			else if (i == 1);
+			else {
+				// atoi
+				for (j = 0;buff[j] != '\0';j++) {
+					if (buff[j] <= '9' && buff[j] >= '0')
+						addr = addr * 16 + (buff[j] - '0');
+					else if (buff[j] <= 'f' && buff[j] >= 'a')
+						addr = addr * 16 + (buff[j] - 'a' + 10);
+					else if (buff[j] <= 'F' && buff[j] >= 'A')
+						addr = addr * 16 + (buff[j] - 'A' + 10);
+				}
+				for (i = 0;i < LONGBUFFSIZE + 3;i++) buff[i] = '\0';
+				i = 0;
+				break;
+			}
+			for (i = 0;i < LONGBUFFSIZE + 3;i++) buff[i] = '\0';
+			i = 0;
+			continue;
+		}
+		disable_interrupt();
+		buff[i++] = ch;
+		screen_write_ch(ch);
+		screen_reflush();
+		enable_interrupt();
+	}
+	*ul = addr;
 }

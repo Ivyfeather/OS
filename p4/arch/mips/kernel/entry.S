@@ -296,12 +296,19 @@ NESTED(handle_TLB_invalid, 0, sp)
 	addiu	k0, k0, USER
 	lw		k1, OFFSET_BADVADDR(k0)	
 
-	
 	# Beware: must change badvaddr to EntryHi (clear lower 12bits)
-	li		k0, 0xfffff000
-	and		k1, k1, k0
-	mtc0	k1, CP0_ENTRYHI
+	li		t0, 0xfffff000
+	and		k1, k1, t0
 	# ASID
+	addiu   k0, k0, -USER   # k0 = addr of current_running
+	lw		t0, 328(k0)		# OFFSET of pid, 328
+	or		k1, k1, t0
+
+	mtc0	k1, CP0_ENTRYHI
+
+
+
+
 	tlbp
 
 

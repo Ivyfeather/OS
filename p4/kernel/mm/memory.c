@@ -70,7 +70,8 @@ void init_TLB()
 
 void do_TLB_Refill()
 {
-	printf_in_kernel("refill");
+	//test
+	//printf_in_kernel("refill");
 
 	pcb_t *p = current_running;
 	uint32_t vaddr = p->user_context.cp0_badvaddr;
@@ -94,7 +95,8 @@ void do_TLB_Refill()
 void do_TLB_Invalid(uint32_t index) 
 {
 	//test
-	printf_in_kernel("invalid ");
+	//printf_in_kernel("invalid ");
+
 
 	pcb_t *p = current_running;
 	uint32_t vaddr = p->user_context.cp0_badvaddr;
@@ -113,7 +115,9 @@ void do_TLB_Invalid(uint32_t index)
 	pte_t entrylo1 = PTE_TO_TLBLO(*(page + 1));
 
 	if (index & 0x80000000) { //TLB NOT found, refill
-		printf_in_kernel("refillEXL=1 ");
+		//test
+		//vt100_move_cursor(1, 7);
+		//printk("refillEXL=1 ");
 		pte_t entryhi = (vaddr & 0xffffe000) + (current_running->pid & 0xff);
 		refill_TLB(entrylo0, entrylo1, entryhi);
 		return;
