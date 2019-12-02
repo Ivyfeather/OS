@@ -82,7 +82,7 @@ void do_TLB_Refill()
 	//test
 	//printf_in_kernel("pte:%x|", *page);
 
-	pte_t entryhi = (vaddr & 0xffffe000);// +(current_running->pid & 0xff);
+	pte_t entryhi = (vaddr & 0xffffe000) + (current_running->pid & 0xff);
 	//EntryHi[12] should be 0
 	//ASID 0~7 bits
 
@@ -111,6 +111,13 @@ void do_TLB_Invalid(uint32_t index)
 
 	pte_t entrylo0 = PTE_TO_TLBLO(*page);
 	pte_t entrylo1 = PTE_TO_TLBLO(*(page + 1));
+
+	if (index & 0x80000000) { //TLB NOT found, refill
+		printf_in_kernel("refillEXL=1 ");
+		pte_t entryhi = (vaddr & 0xffffe000) + (current_running->pid & 0xff);
+		refill_TLB(entrylo0, entrylo1, entryhi);
+		return;
+	}
 
 	invalid_TLB(entrylo0, entrylo1, index);
 	
@@ -176,11 +183,11 @@ pte_t* find_page(uint32_t vaddr)
 	//test
 	//printf_in_kernel("1;");
 
-	pte_t *page_table = dir[dir_num];
+	pte_t *page_table = current_running->page_dir[dir_num];
 
 	if (page_table == NULL) {	//page table not exist
 		pte_t *new_page = (pte_t *)alloc_page_table();
-		page_table = dir[dir_num] = new_page;
+		page_table = current_running->page_dir[dir_num] = new_page;
 
 		// for task 1 & 2, init page table
 		/*

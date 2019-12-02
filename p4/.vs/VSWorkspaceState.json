@@ -8,9 +8,9 @@
     "\\arch\\mips\\kernel",
     "\\include",
     "\\include\\os",
-    "\\test",
-    "\\test\\test_project4"
+    "\\kernel",
+    "\\kernel\\irq"
   ],
-  "SelectedNode": "\\test\\test_project4\\process2.c",
+  "SelectedNode": "\\kernel\\irq\\irq.c",
   "PreviewInSolutionExplorer": false
 }

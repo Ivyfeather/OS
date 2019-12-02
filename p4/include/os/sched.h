@@ -116,8 +116,8 @@ typedef struct pcb
 	/* locks this task holds */
 	mutex_lock_t *lock_array[NUM_LOCKS];
 
-	/* page table */
-	pte_t **page_table;
+	/* page table directory */
+	pte_t **page_dir;
 } pcb_t;
 
 /* task information, used to init PCB */

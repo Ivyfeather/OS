@@ -4,6 +4,8 @@
 #include "sched.h"
 #include "queue.h"
 #include "screen.h"
+#include "irq.h"
+#include "mm.h"
 
 pcb_t pcb[NUM_MAX_TASK];
 
@@ -63,6 +65,8 @@ void scheduler(void)
 	current_running->status = TASK_RUNNING;
 	screen_cursor_x = current_running->cursor_x;
 	screen_cursor_y = current_running->cursor_y;
+
+	change_EntryHi_ASID(current_running->pid);
 }
 
 
@@ -171,7 +175,7 @@ void do_spawn(task_info_t *task, int para_num) {
 	}
 
 	// init page table
-
+	pcb[i].page_dir = (pte_t **)alloc_page_table();
 
 	pcb[i].prev = pcb[i].next = NULL;
 	pcb[i].pid = process_id;
