@@ -290,18 +290,21 @@ NESTED(handle_syscall, 0, sp)
 END(handle_syscall)
 
 NESTED(handle_TLB_invalid, 0, sp)
+	RESTORE_CONTEXT(KERNEL)
+
 	lw		k0, current_running
 	addiu	k0, k0, USER
 	lw		k1, OFFSET_BADVADDR(k0)	
-	#get user_context.badvaddr //or just mfc0 CP0_BADVADDR ?
+
 	
 	# Beware: must change badvaddr to EntryHi (clear lower 12bits)
 	li		k0, 0xfffff000
 	and		k1, k1, k0
 	mtc0	k1, CP0_ENTRYHI
+	# ASID
 	tlbp
 
-	RESTORE_CONTEXT(KERNEL)
+
 	addiu	sp, sp, -16
 	mfc0	a0, CP0_INDEX
 	jal		do_TLB_Invalid
@@ -325,14 +328,25 @@ END(handle_other)
 .global TLBexception_handler_end
 
 # at 0x80000000, solve TLB_refill only 
+# Beware: Refill assembly code must be less than 0x180
+#	or else it will be overlapped by exception_handler at 0x80000180
 NESTED(TLBexception_handler_entry, 0, sp)
 TLBexception_handler_begin:
 	# TODO: TLB exception entry
 	# jmp exception_handler[i] which decided by CP0_CAUSE
 	SAVE_CONTEXT(USER)
-	RESTORE_CONTEXT(KERNEL)
+	#RESTORE_CONTEXT(KERNEL)
+
+	#just use kernel stack here
+	lw      k0, current_running
+    addiu   k0, k0, USER
+    lw      sp, OFFSET_REG29(k0) # sp
+
 	jal		do_TLB_Refill
-	SAVE_CONTEXT(KERNEL)
+	#SAVE_CONTEXT(KERNEL)
+	lw      k0, current_running
+    addiu   k0, k0, USER
+    sw      sp, OFFSET_REG29(k0) # sp
 
 	RESTORE_CONTEXT(USER)
 	eret
@@ -369,3 +383,12 @@ NESTED(invalid_TLB, 0, sp)		# invalid_TLB(pte_even, pte_odd, index)
 	tlbwi
     jr      ra
 END(invalid_TLB)
+
+LEAF(change_EntryHi_ASID)		# change_EntryHi_ASID(pid)
+	#mfc0	t0, CP0_ENTRYHI
+	andi	a0, 0xff
+	#or		t0, t0, a0
+	#mtc0	t0, CP0_ENTRYHI		# vpn of previous process does not apply to next process
+	mtc0	a0, CP0_ENTRYHI		#  just fill ASID, leave vpn 0
+	jr		ra
+END(change_EntryHi_ASID)
