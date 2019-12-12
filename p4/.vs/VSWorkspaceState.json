@@ -6,11 +6,10 @@
     "\\arch\\mips\\boot",
     "\\arch\\mips\\include",
     "\\arch\\mips\\kernel",
+    "\\drivers",
     "\\include",
     "\\include\\os",
-    "\\kernel",
-    "\\kernel\\irq"
+    "\\test"
   ],
-  "SelectedNode": "\\kernel\\irq\\irq.c",
   "PreviewInSolutionExplorer": false
 }
