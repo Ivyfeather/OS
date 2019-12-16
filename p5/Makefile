@@ -15,7 +15,7 @@ SRC_SYSCALL	= ./kernel/syscall/syscall.c
 SRC_LIBS	= ./libs/string.c ./libs/printk.c ./libs/mailbox.c
 
 SRC_TEST	= ./test/test_shell.c
-SRC_TEST4	= ./test/test_net/test_mac1.c
+SRC_TEST4	= ./test/test_net/test_mac3.c
 
 SRC_IMAGE	= ./tools/createimage.c
 

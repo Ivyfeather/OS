@@ -1,5 +1,7 @@
 #include "mac.h"
 #include "irq.h"
+#include "queue.h"
+#include "sched.h"
 
 #define NUM_DMA_DESC 48
 queue_t recv_block_queue;
@@ -82,6 +84,7 @@ static uint32_t printf_recv_buffer(uint32_t recv_buffer)
 	for (;i < 19;i++) {
 		printf_in_kernel("%x ", addr[i]);
 	}
+	return 1;
 }
 
 //in your design,you have the choice to choose use register_irq_handler or not.
@@ -167,14 +170,15 @@ uint32_t do_net_recv(uint32_t rd, uint32_t rd_phy, uint32_t daddr)
 	desc_t *receive = (desc_t *)rd;
 	for (i = 0;i < PNUM;i++)
 		receive[i].desc0 = 0x80000000; //DMA own
-	//for (i = 0;i < PNUM;i++)
-	//	reg_write_32(DMA_BASE_ADDR + 0x8, 0x1);		//write 1 to DMA Reg 2
+	for (i = 0;i < PNUM;i++)
+		reg_write_32(DMA_BASE_ADDR + 0x8, 0x1);		//write 1 to DMA Reg 2
 
 	// if not recv, return 1
+	/*
 	while (1) {
 		reg_write_32(DMA_BASE_ADDR + 0x8, 0x1);
 		for (i = 0;i < PNUM;i++){
-			if ( (receive[i].desc0 & 0x80000000 ) == 0 ) {
+			if ( (receive[64].desc0 & 0x80000000 ) == 0 ) {
 				
 				screen_move_cursor(3, 2);
 				printf_in_kernel("desc0:0x%x\n", receive[0].desc0);
@@ -184,6 +188,7 @@ uint32_t do_net_recv(uint32_t rd, uint32_t rd_phy, uint32_t daddr)
 			}
 		}
 	}
+	*/
     return 0;
 }
 
@@ -226,12 +231,13 @@ void do_init_mac(void)
     disable_interrupt_all(&test_mac);
     set_mac_addr(&test_mac);
 
-	
-
-
+	reg_write_32(INT1_CLR, 0xffffffff);
+	reg_write_32(INT1_POL, 0xffffffff);
+	reg_write_32(INT1_EDGE, 0x0);
 }
 
 void do_wait_recv_package(void)
 {
     //to do: block the recv thread
+	do_block(&recv_block_queue);
 }

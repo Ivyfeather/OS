@@ -9,6 +9,11 @@
 #define TEST_REGS3
 #define GMAC_BASE_ADDR (0xbfe10000)
 #define DMA_BASE_ADDR (0xbfe11000)
+
+#define INT1_CLR  0xbfd01064
+#define INT1_POL  0xbfd01068
+#define INT1_EDGE 0xbfd0106c
+
 #define PSIZE (256)
 #define PNUM (64)
 #define DESC_NUM (64)
@@ -100,6 +105,7 @@ typedef struct mac
 
 uint32_t read_register(uint32_t base, uint32_t offset);
 void reg_write_32(uint32_t addr, uint32_t data);
+uint32_t reg_read_32(uint32_t addr);
 void clear_interrupt();
 void print_rx_dscrb(mac_t *mac);
 void print_tx_dscrb(mac_t *mac);
