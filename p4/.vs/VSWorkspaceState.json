@@ -7,9 +7,10 @@
     "\\arch\\mips\\include",
     "\\arch\\mips\\kernel",
     "\\drivers",
-    "\\include",
-    "\\include\\os",
-    "\\test"
+    "\\kernel",
+    "\\kernel\\locking",
+    "\\kernel\\mm"
   ],
+  "SelectedNode": "\\kernel\\mm\\memory.c",
   "PreviewInSolutionExplorer": false
 }
